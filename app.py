@@ -218,12 +218,25 @@ async def analyze_food(
     if not file.content_type or not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    image_data = await file.read()
-
-    # Create a placeholder analysis_request, can be expanded later
-    analysis_request = AnalysisRequest()
-
-    return await analyzer.analyze_food_image(image_data, analysis_request)
+    try:
+        image_data = await file.read()
+        
+        # Create a placeholder analysis_request, can be expanded later
+        analysis_request = AnalysisRequest()
+        
+        result = await analyzer.analyze_food_image(image_data, analysis_request)
+        
+        # Save result to JSON file with timestamp
+        timestamp = datetime.now().isoformat().replace(':', '-').replace('.', '-')
+        with open(f"analysis_{timestamp}.json", "w") as f:
+            json.dump(result.dict(), f, indent=4)
+        
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error in food analysis: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during analysis")
 
 if __name__ == "__main__":
     import uvicorn

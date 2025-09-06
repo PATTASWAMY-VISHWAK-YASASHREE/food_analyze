@@ -1,4 +1,8 @@
 import pytest
+try:
+    import pytest
+except ImportError:
+    print("pytest module not found. Please install it with 'pip install pytest'")
 from fastapi.testclient import TestClient
 from app import app
 

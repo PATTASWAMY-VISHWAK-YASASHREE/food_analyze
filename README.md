@@ -19,6 +19,15 @@ A powerful FastAPI service that analyzes food images using Hugging Face AI model
 - Python 3.8+
 - Optional: Hugging Face account and token for enhanced model access
 
+### Supported Image Formats
+The API supports common image formats including:
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- GIF (.gif)
+- WebP (.webp)
+
+**Note**: AVIF format is not currently supported due to PIL limitations. Please convert AVIF images to JPEG or PNG before uploading.
+
 ### 1. Clone and Install
 ```bash
 git clone <your-repo-url>

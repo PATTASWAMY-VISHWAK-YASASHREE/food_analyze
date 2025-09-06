@@ -8,7 +8,7 @@ import os
 import json
 import logging
 from typing import List, Dict, Any, Optional, Tuple
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import io
 import torch
 from transformers import (
@@ -48,33 +48,42 @@ class HuggingFaceFoodAnalyzer:
         try:
             # Food classification model
             logger.info("Loading food classification model...")
-            self.food_classifier = pipeline(
-                "image-classification",
-                model=self.food_classifier_model,
-                use_auth_token=self.hf_token,
-                device=0 if self.device == "cuda" else -1
-            )
+            self.processor = AutoImageProcessor.from_pretrained(self.food_classifier_model, token=self.hf_token)
+            self.model = AutoModelForImageClassification.from_pretrained(self.food_classifier_model, token=self.hf_token)
             logger.info("Food classification model loaded successfully")
             
         except Exception as e:
             logger.warning(f"Could not load Hugging Face model, using fallback: {e}")
-            self.food_classifier = None
+            self.processor = None
+            self.model = None
             
     def _fallback_classify_food(self, image: Image.Image) -> List[Dict[str, Any]]:
         """Fallback food classification when HF models are not available"""
-        # Simple heuristic-based classification
-        # In a real implementation, this could use a lightweight local model
-        # or image analysis based on color, texture, etc.
+        # Simple heuristic-based classification based on image properties
+        width, height = image.size
+        aspect_ratio = width / height
         
-        # For demo purposes, return some common food predictions
+        # Basic heuristics
+        if aspect_ratio > 1.5:  # Wide image, maybe a dish
+            primary = "prepared meal"
+        elif width > 1000:  # Large image, maybe detailed food
+            primary = "mixed food"
+        else:
+            primary = "vegetable"
+        
+        # Add some variety
+        import random
+        secondary_options = ["protein", "carbohydrate", "fruit", "dairy"]
+        secondary = random.choice(secondary_options)
+        
         fallback_foods = [
-            {"label": "mixed food", "score": 0.8, "confidence": 80.0},
-            {"label": "prepared meal", "score": 0.6, "confidence": 60.0},
-            {"label": "vegetable", "score": 0.4, "confidence": 40.0},
-            {"label": "protein", "score": 0.3, "confidence": 30.0}
+            {"label": primary, "score": 0.8, "confidence": 80.0},
+            {"label": secondary, "score": 0.6, "confidence": 60.0},
+            {"label": "mixed food", "score": 0.4, "confidence": 40.0},
+            {"label": "prepared meal", "score": 0.3, "confidence": 30.0}
         ]
         
-        logger.info("Using fallback food classification")
+        logger.info(f"Using fallback food classification: {primary}")
         return fallback_foods
             
     def _init_nutrition_database(self):
@@ -159,6 +168,9 @@ class HuggingFaceFoodAnalyzer:
             
             return analysis_result
             
+        except UnidentifiedImageError:
+            logger.error("Unsupported image format. Please upload a JPEG, PNG, or other common image format.")
+            raise ValueError("Unsupported image format. Please upload a JPEG, PNG, or other common image format.")
         except Exception as e:
             logger.error(f"Error analyzing food image: {e}")
             raise
@@ -172,22 +184,34 @@ class HuggingFaceFoodAnalyzer:
         Returns:
             List of food predictions with scores
         """
-        if not self.food_classifier:
+        if not self.model or not self.processor:
             logger.warning("Food classifier not available, using fallback")
             return self._fallback_classify_food(image)
         
         try:
-            predictions = self.food_classifier(image)
+            inputs = self.processor(images=image, return_tensors="pt")
+            if self.device == "cuda":
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
+                self.model.to(self.device)
             
-            # Process predictions
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+                logits = outputs.logits
+                probabilities = torch.nn.functional.softmax(logits, dim=-1)
+                top_probs, top_class_indices = torch.topk(probabilities, 5)
+            
+            # Get class labels
+            id2label = self.model.config.id2label
+            
             processed_predictions = []
-            for pred in predictions[:5]:  # Top 5 predictions
-                label = pred['label'].lower().replace('_', ' ')
-                score = pred['score']
+            for i in range(5):
+                class_idx = top_class_indices[0][i].item()
+                prob = top_probs[0][i].item()
+                label = id2label[class_idx].lower().replace('_', ' ')
                 processed_predictions.append({
                     "label": label,
-                    "score": score,
-                    "confidence": round(score * 100, 2)
+                    "score": prob,
+                    "confidence": round(prob * 100, 2)
                 })
             
             return processed_predictions
