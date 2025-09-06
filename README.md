@@ -1,23 +1,23 @@
-# 🍽️ Food Nutrition Analyzer API with Hugging Face
+# 🍽️ Food Nutrition Analyzer API with USDA
 
-A powerful FastAPI service that analyzes food images using Hugging Face AI models and provides comprehensive nutritional information with local nutrition database.
+A powerful FastAPI service that analyzes food images and provides comprehensive nutritional information using the USDA FoodData Central API for accurate, official nutrition data.
 
 ## ✨ Features
 
-- **🤖 AI-Powered Food Recognition**: Uses Hugging Face models for food image classification
-- **🔍 Ingredient Detection**: Identifies multiple ingredients in food images
-- **📊 Comprehensive Nutrition Data**: Detailed macronutrients, vitamins, and minerals
-- **🌐 Local Nutrition Database**: Built-in nutrition database for common foods
+- **🔍 Food Image Analysis**: Processes food images for identification and analysis
+- **🏛️ USDA Official Data**: Uses USDA FoodData Central for accurate nutrition information
+- **📊 Comprehensive Nutrition**: Detailed macronutrients, vitamins, and minerals from official sources
+- **🔎 Advanced Food Matching**: Smart food matching with USDA database
 - **🚀 Fast API**: High-performance async API with automatic documentation
 - **📱 Easy Integration**: RESTful API with JSON responses
-- **🔧 Fallback Support**: Works even without internet access using fallback classification
-- **🆓 No API Keys Required**: Uses open-source Hugging Face models
+- **🔧 Fallback Support**: Works even without USDA API key using fallback nutrition data
+- **🆓 Free USDA API**: Uses official USDA API (free registration required)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.8+
-- Optional: Hugging Face account and token for enhanced model access
+- USDA FoodData Central API key (free registration at https://fdc.nal.usda.gov/api-key-signup.html)
 
 ### 1. Clone and Install
 ```bash
@@ -26,13 +26,13 @@ cd food_analyze
 pip install -r requirements.txt
 ```
 
-### 2. Environment Setup (Optional)
-Create a `.env` file in the root of the project for enhanced functionality:
+### 2. Environment Setup
+Create a `.env` file in the root of the project:
 ```
-HUGGINGFACE_TOKEN=your_huggingface_token_here
+USDA_API_KEY=your_usda_api_key_here
 ```
 
-**Note:** The application works without a Hugging Face token using fallback classification, but providing a token enables access to more advanced models.
+**Note:** The application works without a USDA API key using fallback nutrition data, but providing a key enables access to official USDA nutritional information.
 
 ### 3. Run the Server
 ```bash
@@ -60,38 +60,63 @@ curl -X POST "http://localhost:8000/analyze-food" \
 ```json
 {
   "food_identification": {
-    "primary_dish": "mixed food",
-    "confidence": 80.0,
-    "alternative_names": ["prepared meal", "vegetable"],
-    "food_category": "other",
+    "primary_dish": "mixed vegetables",
+    "confidence": 75.0,
+    "alternative_names": ["chicken breast", "rice"],
+    "food_category": "vegetable",
     "cuisine_type": null
   },
   "detected_ingredients": [
     {
-      "name": "mixed food",
-      "confidence": 80.0,
-      "estimated_weight": 80.0,
-      "nutritional_category": "other"
+      "name": "mixed vegetables",
+      "confidence": 75.0,
+      "estimated_weight": 75.0,
+      "nutritional_category": "vegetable",
+      "usda_fdc_id": 123456,
+      "usda_description": "Vegetables, mixed, frozen"
     }
   ],
   "macronutrients": {
-    "calories": 150.0,
-    "protein": 5.0,
-    "carbohydrates": 20.0,
-    "fiber": 2.0,
-    "sugars": 0.0,
-    "fat": 5.0,
-    "saturated_fat": 0.0,
-    "sodium": 0.0
+    "calories": 112.5,
+    "protein": 6.0,
+    "carbohydrates": 15.0,
+    "fiber": 2.25,
+    "sugars": 3.75,
+    "fat": 3.75,
+    "saturated_fat": 1.125,
+    "sodium": 150.0
   },
-  "vitamins": [],
-  "minerals": [],
+  "vitamins": [
+    {
+      "name": "Vitamin A",
+      "amount": 835,
+      "unit": "mcg",
+      "daily_value_percentage": 93
+    }
+  ],
+  "minerals": [
+    {
+      "name": "Iron",
+      "amount": 2.7,
+      "unit": "mg",
+      "daily_value_percentage": 15
+    }
+  ],
+  "usda_matches": [
+    {
+      "fdc_id": 123456,
+      "description": "Vegetables, mixed, frozen",
+      "match_confidence": 85.0,
+      "food_category": "Vegetables and Vegetable Products",
+      "ingredients": "Carrots, Green Beans, Corn, Peas"
+    }
+  ],
   "total_estimated_weight": 100.0,
   "calorie_density": 150.0,
   "analysis_metadata": {
-    "model_used": "nateraw/food",
-    "confidence_threshold": 0.3,
-    "nutrition_source": "local_database"
+    "usda_api_used": true,
+    "nutrition_source": "usda_fooddata_central",
+    "api_version": "v1"
   }
 }
 ```
@@ -107,7 +132,7 @@ Basic API information and version.
 ```
 food_analyze/
 ├── app.py                    # Main FastAPI application
-├── hf_food_analyzer.py       # Hugging Face food analyzer core logic
+├── usda_food_analyzer.py     # USDA food analyzer core logic
 ├── requirements.txt          # Python dependencies
 ├── .env.example              # Environment variables template
 ├── .gitignore               # Git ignore rules
@@ -121,13 +146,17 @@ food_analyze/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `HUGGINGFACE_TOKEN` | No | Hugging Face API token for enhanced model access |
+| `USDA_API_KEY` | No | USDA FoodData Central API key for official nutrition data |
 | `LOG_LEVEL` | No | Logging level (default: INFO) |
 
-### Hugging Face Models Used
+### USDA FoodData Central
 
-- **Food Classification**: `nateraw/food` (primary model)
-- **Fallback**: Local heuristic-based classification when models are unavailable
+This application integrates with the USDA FoodData Central API to provide official nutrition data:
+
+- **API Documentation**: https://fdc.nal.usda.gov/api-guide.html
+- **API Key Registration**: https://fdc.nal.usda.gov/api-key-signup.html (free)
+- **Food Search**: Advanced food matching with USDA database
+- **Fallback**: Local nutrition data when API is unavailable
 
 ## 🧪 Testing
 
@@ -150,12 +179,12 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ### Production Considerations
-- Set up environment variables securely
+- Set up environment variables securely (especially USDA API key)
 - Enable HTTPS in production
 - Implement rate limiting if needed
 - Add authentication for sensitive deployments
 - Monitor API usage and performance
-- Consider GPU deployment for faster inference
+- Consider caching USDA API responses to reduce API calls
 
 ## 🤝 Contributing
 
@@ -171,7 +200,8 @@ This project is licensed under the MIT License.
 
 ## 🔗 Links
 
-- [Hugging Face Transformers](https://huggingface.co/docs/transformers)
+- [USDA FoodData Central](https://fdc.nal.usda.gov/)
+- [USDA API Documentation](https://fdc.nal.usda.gov/api-guide.html)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Food Classification Model](https://huggingface.co/nateraw/food)
 

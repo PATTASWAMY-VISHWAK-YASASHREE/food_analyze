@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 import logging
 
-# Import our Hugging Face food analyzer
-from hf_food_analyzer import HuggingFaceFoodAnalyzer
+# Import our USDA food analyzer
+from usda_food_analyzer import USDAFoodAnalyzer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,9 +22,9 @@ load_dotenv()
 
 # Initialize FastAPI
 app = FastAPI(
-    title="Food Nutrition Analyzer API with Hugging Face",
-    description="AI-powered food image analysis using Hugging Face models for food identification and nutrition calculation",
-    version="3.0.0"
+    title="Food Nutrition Analyzer API with USDA",
+    description="AI-powered food image analysis using USDA FoodData Central API for comprehensive nutrition data",
+    version="3.1.0"
 )
 
 # Add CORS middleware
@@ -94,39 +94,39 @@ class AnalysisRequest(BaseModel):
 
 class EnhancedFoodAnalyzer:
     def __init__(self):
-        """Initialize the enhanced food analyzer with Hugging Face models"""
-        self.hf_token = os.getenv("HUGGINGFACE_TOKEN")
+        """Initialize the enhanced food analyzer with USDA API"""
+        self.usda_api_key = os.getenv("USDA_API_KEY")
         
         try:
-            self.hf_analyzer = HuggingFaceFoodAnalyzer(hf_token=self.hf_token)
-            logger.info("Hugging Face Food Analyzer initialized successfully")
+            self.usda_analyzer = USDAFoodAnalyzer(usda_api_key=self.usda_api_key)
+            logger.info("USDA Food Analyzer initialized successfully")
         except Exception as e:
-            logger.error(f"Could not initialize Hugging Face Food Analyzer: {e}", exc_info=True)
-            self.hf_analyzer = None
+            logger.error(f"Could not initialize USDA Food Analyzer: {e}", exc_info=True)
+            self.usda_analyzer = None
 
-        logger.info("Enhanced Food Nutrition Analyzer (HF version) initialized successfully")
+        logger.info("Enhanced Food Nutrition Analyzer (USDA version) initialized successfully")
 
     async def analyze_food_image(self, image_bytes: bytes, analysis_request: AnalysisRequest) -> NutritionalAnalysis:
         """Main analysis function that processes food images and returns comprehensive nutritional data"""
         try:
-            if not self.hf_analyzer:
+            if not self.usda_analyzer:
                 raise HTTPException(status_code=503, detail="Food analyzer not available")
             
-            # Use Hugging Face analyzer
-            analysis_result = self.hf_analyzer.analyze_food_image(image_bytes)
+            # Use USDA analyzer
+            analysis_result = await self.usda_analyzer.analyze_food_image(image_bytes)
             
             # Convert to our response format
-            return self._convert_hf_result_to_response(analysis_result)
+            return self._convert_usda_result_to_response(analysis_result)
             
         except Exception as e:
             logger.error(f"Error in food analysis: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-    def _convert_hf_result_to_response(self, hf_result: Dict[str, Any]) -> NutritionalAnalysis:
-        """Convert Hugging Face analyzer result to our response format"""
+    def _convert_usda_result_to_response(self, usda_result: Dict[str, Any]) -> NutritionalAnalysis:
+        """Convert USDA analyzer result to our response format"""
         
         # Extract food identification
-        food_id = hf_result["food_identification"]
+        food_id = usda_result["food_identification"]
         food_identification = FoodIdentification(
             primary_dish=food_id["primary_dish"],
             confidence=food_id["confidence"],
@@ -137,7 +137,7 @@ class EnhancedFoodAnalyzer:
         
         # Extract detected ingredients
         detected_ingredients = []
-        for ingredient in hf_result["detected_ingredients"]:
+        for ingredient in usda_result["detected_ingredients"]:
             detected_ingredients.append(DetectedIngredient(
                 name=ingredient["name"],
                 confidence=ingredient["confidence"],
@@ -146,7 +146,7 @@ class EnhancedFoodAnalyzer:
             ))
         
         # Extract macronutrients
-        macros = hf_result["macronutrients"]
+        macros = usda_result["macronutrients"]
         macronutrients = MacronutrientBreakdown(
             calories=macros["calories"],
             protein=macros["protein"],
@@ -160,7 +160,7 @@ class EnhancedFoodAnalyzer:
         
         # Extract vitamins
         vitamins = []
-        for vitamin in hf_result["vitamins"]:
+        for vitamin in usda_result["vitamins"]:
             vitamins.append(NutrientInfo(
                 name=vitamin["name"],
                 amount=vitamin["amount"],
@@ -170,12 +170,23 @@ class EnhancedFoodAnalyzer:
         
         # Extract minerals
         minerals = []
-        for mineral in hf_result["minerals"]:
+        for mineral in usda_result["minerals"]:
             minerals.append(NutrientInfo(
                 name=mineral["name"],
                 amount=mineral["amount"],
                 unit=mineral["unit"],
                 daily_value_percentage=mineral.get("daily_value_percentage")
+            ))
+        
+        # Extract USDA matches
+        usda_matches = []
+        for match in usda_result["usda_matches"]:
+            usda_matches.append(USDAFoodMatch(
+                fdc_id=match["fdc_id"],
+                description=match["description"],
+                match_confidence=match.get("match_confidence"),
+                food_category=match["food_category"],
+                ingredients=match.get("ingredients")
             ))
         
         return NutritionalAnalysis(
@@ -184,10 +195,10 @@ class EnhancedFoodAnalyzer:
             macronutrients=macronutrients,
             vitamins=vitamins,
             minerals=minerals,
-            usda_matches=[],  # Not using USDA in HF version
-            total_estimated_weight=hf_result["total_estimated_weight"],
-            calorie_density=hf_result["calorie_density"],
-            analysis_metadata=hf_result["analysis_metadata"]
+            usda_matches=usda_matches,
+            total_estimated_weight=usda_result["total_estimated_weight"],
+            calorie_density=usda_result["calorie_density"],
+            analysis_metadata=usda_result["analysis_metadata"]
         )
 
 # Initialize the analyzer
@@ -196,7 +207,7 @@ analyzer = EnhancedFoodAnalyzer()
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
-    return {"service": "Food Nutrition Analyzer API with Hugging Face", "version": "3.0.0"}
+    return {"service": "Food Nutrition Analyzer API with USDA", "version": "3.1.0"}
 
 @app.get("/health")
 async def health_check():
@@ -205,8 +216,8 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "services": {
-            "huggingface_models": analyzer.hf_analyzer is not None,
-            "huggingface_token": analyzer.hf_token is not None
+            "usda_api": analyzer.usda_analyzer is not None,
+            "usda_api_key": analyzer.usda_api_key is not None
         }
     }
 
