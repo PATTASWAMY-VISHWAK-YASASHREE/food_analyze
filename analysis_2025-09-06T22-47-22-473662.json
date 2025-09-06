@@ -1,0 +1,64 @@
+{
+    "food_identification": {
+        "primary_dish": "grilled salmon",
+        "confidence": 99.22,
+        "alternative_names": [
+            "fish and chips",
+            "pork chop",
+            "scallops"
+        ],
+        "food_category": "protein",
+        "cuisine_type": null
+    },
+    "detected_ingredients": [
+        {
+            "name": "grilled salmon",
+            "confidence": 99.22,
+            "estimated_weight": 119.1,
+            "nutritional_category": "protein"
+        },
+        {
+            "name": "fish and chips",
+            "confidence": 0.07,
+            "estimated_weight": 0.1,
+            "nutritional_category": "other"
+        },
+        {
+            "name": "pork chop",
+            "confidence": 0.05,
+            "estimated_weight": 0.1,
+            "nutritional_category": "other"
+        }
+    ],
+    "macronutrients": {
+        "calories": 249.6,
+        "protein": 24.0,
+        "carbohydrates": 0.0,
+        "fiber": 0.0,
+        "sugars": 0.0,
+        "fat": 15.6,
+        "saturated_fat": 2.4,
+        "sodium": 72.0
+    },
+    "vitamins": [],
+    "minerals": [],
+    "usda_matches": [],
+    "total_estimated_weight": 120.0,
+    "calorie_density": 208.0,
+    "health_assessment": {
+        "status": "healthy",
+        "score": 3,
+        "reasons": [
+            "Moderate calories",
+            "High fat",
+            "Low saturated fat",
+            "Low sodium",
+            "Good protein content"
+        ]
+    },
+    "analysis_metadata": {
+        "model_used": "nateraw/food",
+        "confidence_threshold": 0.3,
+        "nutrition_source": "local_database"
+    }
+}

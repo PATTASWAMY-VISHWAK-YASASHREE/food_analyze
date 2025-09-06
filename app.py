@@ -73,6 +73,11 @@ class USDAFoodMatch(BaseModel):
     food_category: str = Field(..., description="USDA food category")
     ingredients: Optional[str] = Field(None, description="Ingredient list")
 
+class HealthAssessment(BaseModel):
+    status: str = Field(..., description="Health status (healthy, moderate, unhealthy)")
+    score: int = Field(..., description="Health score")
+    reasons: List[str] = Field(default_factory=list, description="Reasons for the assessment")
+
 class NutritionalAnalysis(BaseModel):
     food_identification: FoodIdentification = Field(..., description="Identified food information")
     detected_ingredients: List[DetectedIngredient] = Field(..., description="Individual ingredients detected")
@@ -82,6 +87,7 @@ class NutritionalAnalysis(BaseModel):
     usda_matches: List[USDAFoodMatch] = Field(default_factory=list, description="USDA database matches")
     total_estimated_weight: float = Field(..., description="Total estimated weight in grams")
     calorie_density: float = Field(..., description="Calories per 100g")
+    health_assessment: HealthAssessment = Field(..., description="Health assessment of the food")
     analysis_metadata: Dict[str, Any] = Field(default_factory=dict, description="Analysis metadata")
 
 class AnalysisRequest(BaseModel):
@@ -106,7 +112,7 @@ class EnhancedFoodAnalyzer:
 
         logger.info("Enhanced Food Nutrition Analyzer (HF version) initialized successfully")
 
-    async def analyze_food_image(self, image_bytes: bytes, analysis_request: AnalysisRequest) -> NutritionalAnalysis:
+    def analyze_food_image(self, image_bytes: bytes) -> NutritionalAnalysis:
         """Main analysis function that processes food images and returns comprehensive nutritional data"""
         try:
             if not self.hf_analyzer:
@@ -178,6 +184,14 @@ class EnhancedFoodAnalyzer:
                 daily_value_percentage=mineral.get("daily_value_percentage")
             ))
         
+        # Extract health assessment
+        health = hf_result["health_assessment"]
+        health_assessment = HealthAssessment(
+            status=health["status"],
+            score=health["score"],
+            reasons=health["reasons"]
+        )
+        
         return NutritionalAnalysis(
             food_identification=food_identification,
             detected_ingredients=detected_ingredients,
@@ -187,6 +201,7 @@ class EnhancedFoodAnalyzer:
             usda_matches=[],  # Not using USDA in HF version
             total_estimated_weight=hf_result["total_estimated_weight"],
             calorie_density=hf_result["calorie_density"],
+            health_assessment=health_assessment,
             analysis_metadata=hf_result["analysis_metadata"]
         )
 
@@ -221,10 +236,7 @@ async def analyze_food(
     try:
         image_data = await file.read()
         
-        # Create a placeholder analysis_request, can be expanded later
-        analysis_request = AnalysisRequest()
-        
-        result = await analyzer.analyze_food_image(image_data, analysis_request)
+        result = analyzer.analyze_food_image(image_data)
         
         # Save result to JSON file with timestamp
         timestamp = datetime.now().isoformat().replace(':', '-').replace('.', '-')

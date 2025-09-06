@@ -63,17 +63,23 @@ class HuggingFaceFoodAnalyzer:
         width, height = image.size
         aspect_ratio = width / height
         
-        # Basic heuristics
-        if aspect_ratio > 1.5:  # Wide image, maybe a dish
+        # More varied heuristics
+        if aspect_ratio > 1.8:  # Very wide, maybe a pizza or sandwich
+            primary = "pizza"
+        elif aspect_ratio > 1.3:  # Wide, maybe a dish
             primary = "prepared meal"
-        elif width > 1000:  # Large image, maybe detailed food
+        elif width > 1200:  # Large image, maybe detailed food
             primary = "mixed food"
+        elif height > width * 1.2:  # Tall image, maybe a burger or sandwich
+            primary = "sandwich"
         else:
-            primary = "vegetable"
+            # Random selection from common foods
+            common_foods = ["chicken", "beef", "salmon", "rice", "pasta", "bread", "apple", "banana", "cheese", "salad"]
+            import random
+            primary = random.choice(common_foods)
         
         # Add some variety
-        import random
-        secondary_options = ["protein", "carbohydrate", "fruit", "dairy"]
+        secondary_options = ["protein", "carbohydrate", "fruit", "dairy", "vegetable"]
         secondary = random.choice(secondary_options)
         
         fallback_foods = [
@@ -91,47 +97,47 @@ class HuggingFaceFoodAnalyzer:
         # Basic nutrition data for common foods (calories per 100g)
         self.nutrition_db = {
             # Proteins
-            "chicken": {"calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0},
-            "beef": {"calories": 250, "protein": 26, "carbs": 0, "fat": 17, "fiber": 0},
-            "salmon": {"calories": 208, "protein": 20, "carbs": 0, "fat": 13, "fiber": 0},
-            "eggs": {"calories": 155, "protein": 13, "carbs": 1.1, "fat": 11, "fiber": 0},
-            "tofu": {"calories": 76, "protein": 8, "carbs": 1.9, "fat": 4.8, "fiber": 0.3},
+            "chicken": {"calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0, "saturated_fat": 1.0, "sodium": 70},
+            "beef": {"calories": 250, "protein": 26, "carbs": 0, "fat": 17, "fiber": 0, "saturated_fat": 7.0, "sodium": 60},
+            "salmon": {"calories": 208, "protein": 20, "carbs": 0, "fat": 13, "fiber": 0, "saturated_fat": 2.0, "sodium": 60},
+            "eggs": {"calories": 155, "protein": 13, "carbs": 1.1, "fat": 11, "fiber": 0, "saturated_fat": 3.0, "sodium": 140},
+            "tofu": {"calories": 76, "protein": 8, "carbs": 1.9, "fat": 4.8, "fiber": 0.3, "saturated_fat": 0.7, "sodium": 10},
             
             # Carbohydrates
-            "rice": {"calories": 130, "protein": 2.7, "carbs": 28, "fat": 0.3, "fiber": 0.4},
-            "pasta": {"calories": 131, "protein": 5, "carbs": 25, "fat": 1.1, "fiber": 1.8},
-            "bread": {"calories": 265, "protein": 9, "carbs": 49, "fat": 3.2, "fiber": 2.7},
-            "potato": {"calories": 77, "protein": 2, "carbs": 17, "fat": 0.1, "fiber": 2.2},
-            "quinoa": {"calories": 120, "protein": 4.4, "carbs": 22, "fat": 1.9, "fiber": 2.8},
+            "rice": {"calories": 130, "protein": 2.7, "carbs": 28, "fat": 0.3, "fiber": 0.4, "saturated_fat": 0.1, "sodium": 1},
+            "pasta": {"calories": 131, "protein": 5, "carbs": 25, "fat": 1.1, "fiber": 1.8, "saturated_fat": 0.2, "sodium": 1},
+            "bread": {"calories": 265, "protein": 9, "carbs": 49, "fat": 3.2, "fiber": 2.7, "saturated_fat": 0.6, "sodium": 490},
+            "potato": {"calories": 77, "protein": 2, "carbs": 17, "fat": 0.1, "fiber": 2.2, "saturated_fat": 0.0, "sodium": 10},
+            "quinoa": {"calories": 120, "protein": 4.4, "carbs": 22, "fat": 1.9, "fiber": 2.8, "saturated_fat": 0.2, "sodium": 5},
             
             # Vegetables
-            "broccoli": {"calories": 34, "protein": 2.8, "carbs": 7, "fat": 0.4, "fiber": 2.6},
-            "carrots": {"calories": 41, "protein": 0.9, "carbs": 10, "fat": 0.2, "fiber": 2.8},
-            "spinach": {"calories": 23, "protein": 2.9, "carbs": 3.6, "fat": 0.4, "fiber": 2.2},
-            "tomato": {"calories": 18, "protein": 0.9, "carbs": 3.9, "fat": 0.2, "fiber": 1.2},
-            "cucumber": {"calories": 16, "protein": 0.7, "carbs": 4, "fat": 0.1, "fiber": 0.5},
+            "broccoli": {"calories": 34, "protein": 2.8, "carbs": 7, "fat": 0.4, "fiber": 2.6, "saturated_fat": 0.0, "sodium": 33},
+            "carrots": {"calories": 41, "protein": 0.9, "carbs": 10, "fat": 0.2, "fiber": 2.8, "saturated_fat": 0.0, "sodium": 69},
+            "spinach": {"calories": 23, "protein": 2.9, "carbs": 3.6, "fat": 0.4, "fiber": 2.2, "saturated_fat": 0.0, "sodium": 79},
+            "tomato": {"calories": 18, "protein": 0.9, "carbs": 3.9, "fat": 0.2, "fiber": 1.2, "saturated_fat": 0.0, "sodium": 5},
+            "cucumber": {"calories": 16, "protein": 0.7, "carbs": 4, "fat": 0.1, "fiber": 0.5, "saturated_fat": 0.0, "sodium": 2},
             
             # Fruits
-            "apple": {"calories": 52, "protein": 0.3, "carbs": 14, "fat": 0.2, "fiber": 2.4},
-            "banana": {"calories": 89, "protein": 1.1, "carbs": 23, "fat": 0.3, "fiber": 2.6},
-            "orange": {"calories": 47, "protein": 0.9, "carbs": 12, "fat": 0.1, "fiber": 2.4},
-            "strawberry": {"calories": 32, "protein": 0.7, "carbs": 8, "fat": 0.3, "fiber": 2},
+            "apple": {"calories": 52, "protein": 0.3, "carbs": 14, "fat": 0.2, "fiber": 2.4, "saturated_fat": 0.0, "sodium": 1},
+            "banana": {"calories": 89, "protein": 1.1, "carbs": 23, "fat": 0.3, "fiber": 2.6, "saturated_fat": 0.0, "sodium": 1},
+            "orange": {"calories": 47, "protein": 0.9, "carbs": 12, "fat": 0.1, "fiber": 2.4, "saturated_fat": 0.0, "sodium": 0},
+            "strawberry": {"calories": 32, "protein": 0.7, "carbs": 8, "fat": 0.3, "fiber": 2, "saturated_fat": 0.0, "sodium": 1},
             
             # Dairy
-            "cheese": {"calories": 113, "protein": 7, "carbs": 1, "fat": 9, "fiber": 0},
-            "milk": {"calories": 42, "protein": 3.4, "carbs": 5, "fat": 1, "fiber": 0},
-            "yogurt": {"calories": 59, "protein": 10, "carbs": 3.6, "fat": 0.4, "fiber": 0},
+            "cheese": {"calories": 113, "protein": 7, "carbs": 1, "fat": 9, "fiber": 0, "saturated_fat": 5.0, "sodium": 174},
+            "milk": {"calories": 42, "protein": 3.4, "carbs": 5, "fat": 1, "fiber": 0, "saturated_fat": 0.6, "sodium": 44},
+            "yogurt": {"calories": 59, "protein": 10, "carbs": 3.6, "fat": 0.4, "fiber": 0, "saturated_fat": 0.3, "sodium": 36},
             
             # Nuts and seeds
-            "almonds": {"calories": 579, "protein": 21, "carbs": 22, "fat": 50, "fiber": 12},
-            "walnuts": {"calories": 654, "protein": 15, "carbs": 14, "fat": 65, "fiber": 6.7},
+            "almonds": {"calories": 579, "protein": 21, "carbs": 22, "fat": 50, "fiber": 12, "saturated_fat": 4.0, "sodium": 1},
+            "walnuts": {"calories": 654, "protein": 15, "carbs": 14, "fat": 65, "fiber": 6.7, "saturated_fat": 6.0, "sodium": 2},
             
             # Prepared foods
-            "pizza": {"calories": 266, "protein": 11, "carbs": 33, "fat": 10, "fiber": 2.3},
-            "burger": {"calories": 295, "protein": 17, "carbs": 24, "fat": 14, "fiber": 2},
-            "salad": {"calories": 33, "protein": 3, "carbs": 6, "fat": 0.2, "fiber": 2.1},
-            "sandwich": {"calories": 200, "protein": 10, "carbs": 30, "fat": 5, "fiber": 2},
-            "soup": {"calories": 50, "protein": 3, "carbs": 8, "fat": 1, "fiber": 1},
+            "pizza": {"calories": 266, "protein": 11, "carbs": 33, "fat": 10, "fiber": 2.3, "saturated_fat": 4.0, "sodium": 600},
+            "burger": {"calories": 295, "protein": 17, "carbs": 24, "fat": 14, "fiber": 2, "saturated_fat": 6.0, "sodium": 400},
+            "salad": {"calories": 33, "protein": 3, "carbs": 6, "fat": 0.2, "fiber": 2.1, "saturated_fat": 0.0, "sodium": 100},
+            "sandwich": {"calories": 200, "protein": 10, "carbs": 30, "fat": 5, "fiber": 2, "saturated_fat": 1.5, "sodium": 500},
+            "soup": {"calories": 50, "protein": 3, "carbs": 8, "fat": 1, "fiber": 1, "saturated_fat": 0.3, "sodium": 300},
         }
         
         # Food categories for better classification
@@ -278,6 +284,7 @@ class HuggingFaceFoodAnalyzer:
             "minerals": self._get_mineral_info(primary_label),
             "total_estimated_weight": estimated_portion,
             "calorie_density": round(nutrition_data["calories"], 2),
+            "health_assessment": self._assess_health(nutrition_per_portion, primary_label),
             "analysis_metadata": {
                 "model_used": self.food_classifier_model,
                 "confidence_threshold": 0.3,
@@ -306,7 +313,7 @@ class HuggingFaceFoodAnalyzer:
         # Default values for unknown foods
         return {
             "calories": 150, "protein": 5, "carbs": 20, 
-            "fat": 5, "fiber": 2
+            "fat": 5, "fiber": 2, "saturated_fat": 1.5, "sodium": 100
         }
     
     def _estimate_portion_size(self, food_label: str) -> float:
@@ -465,6 +472,86 @@ class HuggingFaceFoodAnalyzer:
         
         return mineral_sources.get(food_label, [])
     
+    def _assess_health(self, nutrition_per_portion: Dict[str, float], food_label: str) -> Dict[str, Any]:
+        """Assess the healthiness of the food
+        
+        Args:
+            nutrition_per_portion: Nutrition values for the portion
+            food_label: Food label
+            
+        Returns:
+            Health assessment dictionary
+        """
+        calories = nutrition_per_portion.get("calories", 0)
+        fat = nutrition_per_portion.get("fat", 0)
+        saturated_fat = nutrition_per_portion.get("saturated_fat", 0)
+        sodium = nutrition_per_portion.get("sodium", 0)
+        fiber = nutrition_per_portion.get("fiber", 0)
+        protein = nutrition_per_portion.get("protein", 0)
+        
+        # Simple health scoring
+        score = 0
+        reasons = []
+        
+        # Calories (assuming 200-500 is moderate)
+        if calories < 200:
+            score += 2
+            reasons.append("Low calorie")
+        elif calories > 500:
+            score -= 2
+            reasons.append("High calorie")
+        else:
+            score += 1
+            reasons.append("Moderate calories")
+        
+        # Fat content
+        if fat < 5:
+            score += 1
+            reasons.append("Low fat")
+        elif fat > 15:
+            score -= 1
+            reasons.append("High fat")
+        
+        # Saturated fat
+        if saturated_fat < 3:
+            score += 1
+            reasons.append("Low saturated fat")
+        else:
+            score -= 1
+            reasons.append("High saturated fat")
+        
+        # Sodium
+        if sodium < 300:
+            score += 1
+            reasons.append("Low sodium")
+        else:
+            score -= 1
+            reasons.append("High sodium")
+        
+        # Fiber
+        if fiber > 3:
+            score += 1
+            reasons.append("Good fiber content")
+        
+        # Protein
+        if protein > 10:
+            score += 1
+            reasons.append("Good protein content")
+        
+        # Determine overall health
+        if score >= 3:
+            health_status = "healthy"
+        elif score >= 0:
+            health_status = "moderate"
+        else:
+            health_status = "unhealthy"
+        
+        return {
+            "status": health_status,
+            "score": score,
+            "reasons": reasons
+        }
+    
     def _create_empty_analysis(self) -> Dict[str, Any]:
         """Create empty analysis result for when no predictions are available"""
         return {
@@ -485,6 +572,11 @@ class HuggingFaceFoodAnalyzer:
             "minerals": [],
             "total_estimated_weight": 0.0,
             "calorie_density": 0.0,
+            "health_assessment": {
+                "status": "unknown",
+                "score": 0,
+                "reasons": []
+            },
             "analysis_metadata": {
                 "model_used": "none",
                 "confidence_threshold": 0.3,

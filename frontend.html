@@ -60,7 +60,31 @@
                     resultDiv.textContent = 'Error: ' + errorMessage;
                 } else {
                     const data = await response.json();
-                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                    // Display formatted results
+                    let html = '<h3>Analysis Results</h3>';
+                    html += '<p><strong>Food:</strong> ' + data.food_identification.primary_dish + ' (' + data.food_identification.confidence + '% confidence)</p>';
+                    html += '<p><strong>Category:</strong> ' + data.food_identification.food_category + '</p>';
+                    
+                    html += '<h4>Macronutrients</h4>';
+                    html += '<ul>';
+                    html += '<li>Calories: ' + data.macronutrients.calories + '</li>';
+                    html += '<li>Protein: ' + data.macronutrients.protein + 'g</li>';
+                    html += '<li>Carbohydrates: ' + data.macronutrients.carbohydrates + 'g</li>';
+                    html += '<li>Fiber: ' + data.macronutrients.fiber + 'g</li>';
+                    html += '<li>Fat: ' + data.macronutrients.fat + 'g</li>';
+                    html += '<li>Saturated Fat: ' + data.macronutrients.saturated_fat + 'g</li>';
+                    html += '<li>Sodium: ' + data.macronutrients.sodium + 'mg</li>';
+                    html += '</ul>';
+                    
+                    html += '<h4>Health Assessment</h4>';
+                    html += '<p><strong>Status:</strong> ' + data.health_assessment.status + ' (Score: ' + data.health_assessment.score + ')</p>';
+                    html += '<p><strong>Reasons:</strong></p><ul>';
+                    data.health_assessment.reasons.forEach(reason => {
+                        html += '<li>' + reason + '</li>';
+                    });
+                    html += '</ul>';
+                    
+                    resultDiv.innerHTML = html;
                 }
             } catch (err) {
                 resultDiv.textContent = 'Request failed: ' + err.message;
