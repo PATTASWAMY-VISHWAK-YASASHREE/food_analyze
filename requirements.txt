@@ -16,11 +16,10 @@ numpy>=1.24.0
 # Environment variable support
 python-dotenv>=1.0.0
 
-# Optional: For enhanced logging and monitoring
-# python-json-logger>=2.0.7
-
-# Google Cloud
-google-cloud-vision>=3.4.0
+# Hugging Face dependencies
+transformers>=4.30.0
+torch>=2.0.0
+torchvision>=0.15.0
 
 # Testing
 pytest>=7.4.3
