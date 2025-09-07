@@ -1,0 +1,71 @@
+# Git files
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Analysis results (temporary files)
+analysis_*.json
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+*.md
+docs/
+
+# Development files
+.env.example
+docker-compose.yml
+docker-compose.yaml
+
+# CI/CD (keep cloudbuild.yaml for deployment)
+.github/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  food-analyzer:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - LOG_LEVEL=INFO
+      # Uncomment and set your Hugging Face token for enhanced functionality
+      # - HUGGINGFACE_TOKEN=your_token_here
+    volumes:
+      # Mount for development (uncomment for development)
+      # - .:/app
+      # Mount for analysis results
+      - ./analysis_results:/app/analysis_results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a reverse proxy for production-like setup
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - food-analyzer

@@ -147,24 +147,164 @@ pytest test_app.py -v
 
 ## 🚀 Deployment
 
+### Local Development
+
+#### Prerequisites
+- Python 3.8+
+- Optional: Hugging Face account and token for enhanced model access
+
+#### 1. Clone and Install
+```bash
+git clone <your-repo-url>
+cd food_analyze
+pip install -r requirements.txt
+```
+
+#### 2. Environment Setup (Optional)
+Create a `.env` file in the root of the project for enhanced functionality:
+```
+HUGGINGFACE_TOKEN=your_huggingface_token_here
+```
+
+**Note:** The application works without a Hugging Face token using fallback classification, but providing a token enables access to more advanced models.
+
+#### 3. Run the Server
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+### Google Cloud Run Deployment
+
+This application is optimized for deployment on Google Cloud Run with Cloud Build for CI/CD.
+
+#### Prerequisites
+- Google Cloud account with billing enabled
+- Google Cloud SDK installed
+- Docker installed (for local testing)
+
+#### Quick Deployment
+
+1. **Automated Deployment (Recommended)**
+   ```bash
+   # Make the script executable
+   chmod +x deploy.sh
+   
+   # Run the deployment
+   ./deploy.sh
+   ```
+
+2. **Manual Deployment**
+   ```bash
+   # 1. Set up Google Cloud
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   
+   # 2. Enable required APIs
+   gcloud services enable cloudbuild.googleapis.com
+   gcloud services enable run.googleapis.com
+   gcloud services enable containerregistry.googleapis.com
+   
+   # 3. Deploy using Cloud Build
+   gcloud builds submit --config cloudbuild.yaml .
+   ```
+
+#### Deployment Configuration
+
+The application includes the following files for Google Cloud deployment:
+
+- **`Dockerfile`**: Containerizes the FastAPI application with security best practices
+- **`cloudbuild.yaml`**: Cloud Build configuration for automated CI/CD
+- **`.gcloudignore`**: Excludes unnecessary files from deployment
+- **`deploy.sh`**: Automated deployment script
+- **`.env.example`**: Environment variables template
+
+#### Environment Variables for Cloud Run
+
+Set these environment variables in Cloud Run for optimal performance:
+
+```bash
+# Required for enhanced functionality
+HUGGINGFACE_TOKEN=your_token_here
+
+# Optional configuration
+LOG_LEVEL=INFO
+```
+
+You can set environment variables during deployment:
+
+```bash
+gcloud run deploy food-analyzer \
+  --image gcr.io/YOUR_PROJECT_ID/food-analyzer:latest \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars HUGGINGFACE_TOKEN=your_token_here,LOG_LEVEL=INFO
+```
+
+#### Cloud Run Configuration
+
+The application is configured with the following Cloud Run settings:
+
+- **Port**: 8080 (Cloud Run standard)
+- **Memory**: 2Gi (required for ML models)
+- **CPU**: 1 vCPU
+- **Max Instances**: 10
+- **Timeout**: 300 seconds
+- **Concurrency**: 80 requests per instance
+
+#### Monitoring and Logging
+
+- **Health Check**: Available at `/health` endpoint
+- **API Documentation**: Available at `/docs` endpoint  
+- **Logs**: Available in Google Cloud Console under Cloud Logging
+- **Metrics**: Available in Google Cloud Console under Cloud Monitoring
+
+#### Custom Domain (Optional)
+
+To use a custom domain with your Cloud Run service:
+
+```bash
+# Map your domain
+gcloud run domain-mappings create \
+  --service food-analyzer \
+  --domain your-domain.com \
+  --region us-central1
+```
+
 ### Docker Deployment
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+#### Build and Run Locally
+```bash
+# Build the image
+docker build -t food-analyzer .
+
+# Run the container
+docker run -p 8080:8080 \
+  -e HUGGINGFACE_TOKEN=your_token_here \
+  food-analyzer
+```
+
+#### Docker Compose (Development)
+```yaml
+version: '3.8'
+services:
+  food-analyzer:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - HUGGINGFACE_TOKEN=your_token_here
+      - LOG_LEVEL=INFO
+    volumes:
+      - .:/app
 ```
 
 ### Production Considerations
-- Set up environment variables securely
-- Enable HTTPS in production
-- Implement rate limiting if needed
-- Add authentication for sensitive deployments
-- Monitor API usage and performance
-- Consider GPU deployment for faster inference
+- Set up environment variables securely using Google Secret Manager
+- Enable HTTPS (automatically handled by Cloud Run)
+- Implement authentication for sensitive deployments
+- Monitor API usage and performance through Cloud Monitoring
+- Consider using Cloud CDN for better global performance
+- Set up alerting for application errors and performance issues
 
 ## 🤝 Contributing
 
