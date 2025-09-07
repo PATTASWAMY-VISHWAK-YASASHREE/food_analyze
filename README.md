@@ -250,6 +250,7 @@ The application is configured with the following Cloud Run settings:
 - **Max Instances**: 10
 - **Timeout**: 300 seconds
 - **Concurrency**: 80 requests per instance
+- **acess_link**: https://food-45609451577.asia-south1.run.app(API_LINK)
 
 #### Monitoring and Logging
 
