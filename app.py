@@ -238,9 +238,11 @@ async def analyze_food(
         
         result = analyzer.analyze_food_image(image_data)
         
-        # Save result to JSON file with timestamp
+        # Save result to JSON file with timestamp in analysis_results directory
+        os.makedirs("analysis_results", exist_ok=True)
         timestamp = datetime.now().isoformat().replace(':', '-').replace('.', '-')
-        with open(f"analysis_{timestamp}.json", "w") as f:
+        result_file = f"analysis_results/analysis_{timestamp}.json"
+        with open(result_file, "w") as f:
             json.dump(result.dict(), f, indent=4)
         
         return result
@@ -252,4 +254,6 @@ async def analyze_food(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    # Use PORT environment variable if available (for Cloud Run), otherwise default to 8000
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
