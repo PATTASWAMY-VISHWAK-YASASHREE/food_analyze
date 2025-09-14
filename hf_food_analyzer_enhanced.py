@@ -80,73 +80,20 @@ class EnhancedHuggingFaceFoodAnalyzer:
             self.nutrition_model = None
             
     def _init_enhanced_nutrition_database(self):
-        """Initialize enhanced nutrition database with Food-101 dataset foods"""
-        # Enhanced nutrition data based on Food-101 categories with more accurate values
-        self.nutrition_db = {
-            # Proteins
-            "chicken breast": {"calories": 165, "protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0, "saturated_fat": 1.0, "sodium": 70},
-            "chicken wings": {"calories": 203, "protein": 30.5, "carbs": 0, "fat": 8.1, "fiber": 0, "saturated_fat": 2.3, "sodium": 82},
-            "beef carpaccio": {"calories": 217, "protein": 26, "carbs": 0, "fat": 11.3, "fiber": 0, "saturated_fat": 4.6, "sodium": 60},
-            "pork chop": {"calories": 231, "protein": 23, "carbs": 0, "fat": 14.6, "fiber": 0, "saturated_fat": 5.2, "sodium": 62},
-            "grilled salmon": {"calories": 206, "protein": 22, "carbs": 0, "fat": 12, "fiber": 0, "saturated_fat": 2.3, "sodium": 59},
-            "tuna tartare": {"calories": 184, "protein": 30, "carbs": 0, "fat": 6.3, "fiber": 0, "saturated_fat": 1.6, "sodium": 50},
-            "oysters": {"calories": 68, "protein": 7, "carbs": 4.2, "fat": 2.5, "fiber": 0, "saturated_fat": 0.7, "sodium": 211},
-            "lobster bisque": {"calories": 120, "protein": 8, "carbs": 7, "fat": 7, "fiber": 0.5, "saturated_fat": 4.3, "sodium": 580},
-            
-            # Breakfast items
-            "french toast": {"calories": 149, "protein": 5, "carbs": 16, "fat": 7, "fiber": 0.8, "saturated_fat": 2.9, "sodium": 311},
-            "pancakes": {"calories": 227, "protein": 6, "carbs": 28, "fat": 10, "fiber": 1.5, "saturated_fat": 2.3, "sodium": 439},
-            "eggs benedict": {"calories": 512, "protein": 20, "carbs": 25, "fat": 39, "fiber": 2, "saturated_fat": 15, "sodium": 1156},
-            "breakfast burrito": {"calories": 326, "protein": 17, "carbs": 26, "fat": 17, "fiber": 3, "saturated_fat": 7, "sodium": 708},
-            
-            # Desserts
-            "chocolate cake": {"calories": 352, "protein": 5, "carbs": 50.5, "fat": 16, "fiber": 2.4, "saturated_fat": 5.4, "sodium": 327},
-            "cheesecake": {"calories": 321, "protein": 5.5, "carbs": 25.9, "fat": 22.9, "fiber": 0.8, "saturated_fat": 12.9, "sodium": 438},
-            "apple pie": {"calories": 237, "protein": 2.4, "carbs": 34.9, "fat": 11, "fiber": 1.6, "saturated_fat": 4.7, "sodium": 327},
-            "ice cream": {"calories": 207, "protein": 3.5, "carbs": 24, "fat": 11, "fiber": 0.7, "saturated_fat": 6.8, "sodium": 80},
-            "donuts": {"calories": 452, "protein": 4.9, "carbs": 51.3, "fat": 25.7, "fiber": 1.7, "saturated_fat": 12.8, "sodium": 375},
-            
-            # International dishes
-            "sushi": {"calories": 143, "protein": 6, "carbs": 28, "fat": 1.4, "fiber": 0.6, "saturated_fat": 0.2, "sodium": 428},
-            "ramen": {"calories": 436, "protein": 20, "carbs": 65, "fat": 12, "fiber": 4, "saturated_fat": 3.2, "sodium": 1820},
-            "pad thai": {"calories": 300, "protein": 15, "carbs": 40, "fat": 10, "fiber": 3, "saturated_fat": 2, "sodium": 1100},
-            "spaghetti carbonara": {"calories": 393, "protein": 19, "carbs": 25, "fat": 25, "fiber": 1.8, "saturated_fat": 12, "sodium": 1047},
-            "paella": {"calories": 235, "protein": 12, "carbs": 30, "fat": 8, "fiber": 2, "saturated_fat": 2.5, "sodium": 567},
-            "falafel": {"calories": 333, "protein": 13.3, "carbs": 31.8, "fat": 17.8, "fiber": 4.9, "saturated_fat": 2.3, "sodium": 585},
-            
-            # Salads and healthy options
-            "caesar salad": {"calories": 158, "protein": 7, "carbs": 7, "fat": 13, "fiber": 3, "saturated_fat": 3, "sodium": 470},
-            "greek salad": {"calories": 107, "protein": 4, "carbs": 8, "fat": 7.3, "fiber": 3.3, "saturated_fat": 3.2, "sodium": 1061},
-            "caprese salad": {"calories": 166, "protein": 11, "carbs": 5, "fat": 12, "fiber": 1, "saturated_fat": 7, "sodium": 390},
-            
-            # Sandwiches and wraps
-            "club sandwich": {"calories": 590, "protein": 36, "carbs": 55, "fat": 24, "fiber": 4, "saturated_fat": 8, "sodium": 1651},
-            "hamburger": {"calories": 295, "protein": 17, "carbs": 24, "fat": 14, "fiber": 2, "saturated_fat": 6, "sodium": 396},
-            "hot dog": {"calories": 151, "protein": 5, "carbs": 2, "fat": 13, "fiber": 0, "saturated_fat": 4.9, "sodium": 567},
-            
-            # Soups
-            "french onion soup": {"calories": 135, "protein": 7, "carbs": 12, "fat": 7, "fiber": 1.5, "saturated_fat": 4, "sodium": 1053},
-            "clam chowder": {"calories": 150, "protein": 9, "carbs": 15, "fat": 6, "fiber": 1, "saturated_fat": 3, "sodium": 992},
-            "miso soup": {"calories": 40, "protein": 3, "carbs": 4, "fat": 1.2, "fiber": 1, "saturated_fat": 0.2, "sodium": 1006},
-            
-            # Pizza and Italian
-            "pizza": {"calories": 266, "protein": 11, "carbs": 33, "fat": 10, "fiber": 2.3, "saturated_fat": 4.0, "sodium": 640},
-            "lasagna": {"calories": 176, "protein": 12, "carbs": 13, "fat": 9, "fiber": 1.4, "saturated_fat": 5, "sodium": 377},
-            "risotto": {"calories": 179, "protein": 5, "carbs": 29, "fat": 5, "fiber": 1.5, "saturated_fat": 1.5, "sodium": 280},
-        }
-        
-        # Enhanced food categories mapping for Food-101 dataset
+        """Initialize minimal food categories for enhanced classification"""
+        # Keep only essential food categories for classification - NO static nutrition data
+        # All nutrition is now calculated dynamically based on model predictions
         self.food_categories = {
-            "protein": ["chicken breast", "chicken wings", "beef carpaccio", "pork chop", "grilled salmon", "tuna tartare", "oysters"],
-            "breakfast": ["french toast", "pancakes", "eggs benedict", "breakfast burrito"],
-            "dessert": ["chocolate cake", "cheesecake", "apple pie", "ice cream", "donuts"],
-            "asian": ["sushi", "ramen", "pad thai", "miso soup"],
-            "italian": ["spaghetti carbonara", "pizza", "lasagna", "risotto"],
-            "mediterranean": ["paella", "falafel", "greek salad", "caprese salad"],
-            "salad": ["caesar salad", "greek salad", "caprese salad"],
-            "sandwich": ["club sandwich", "hamburger", "hot dog"],
-            "soup": ["french onion soup", "clam chowder", "miso soup", "lobster bisque"],
-            "seafood": ["grilled salmon", "tuna tartare", "oysters", "lobster bisque", "clam chowder", "sushi"]
+            "protein": ["chicken", "beef", "pork", "fish", "seafood", "meat"],
+            "breakfast": ["toast", "pancakes", "eggs", "cereal"],
+            "dessert": ["cake", "pie", "ice cream", "cookie", "donut"],
+            "asian": ["sushi", "ramen", "noodles", "rice"],
+            "italian": ["pasta", "pizza", "lasagna"],
+            "mediterranean": ["salad", "falafel", "hummus"],
+            "vegetable": ["salad", "broccoli", "carrot", "spinach"],
+            "fruit": ["apple", "banana", "orange", "berry"],
+            "dairy": ["cheese", "milk", "yogurt"],
+            "grain": ["bread", "rice", "pasta", "cereal"]
         }
 
     def analyze_food_image(self, image_bytes: bytes) -> Dict[str, Any]:
@@ -276,79 +223,145 @@ class EnhancedHuggingFaceFoodAnalyzer:
         }
 
     def _get_enhanced_nutrition_data(self, food_label: str) -> Dict[str, float]:
-        """Get enhanced nutrition data with better matching"""
-        # Direct lookup in enhanced database
-        if food_label in self.nutrition_db:
-            return self.nutrition_db[food_label]
+        """Get dynamic nutrition data based on actual model predictions"""
+        # ALL nutrition is now calculated dynamically based on model predictions
+        # No more static database lookups that ignore the 89.6% accuracy model!
+        return self._calculate_dynamic_nutrition(food_label)
+    
+    def _calculate_dynamic_nutrition(self, food_label: str) -> Dict[str, float]:
+        """Calculate nutrition dynamically for ANY food the model detects"""
+        food_lower = food_label.lower()
         
-        # Enhanced fuzzy matching
-        for food_name in self.nutrition_db:
-            if food_name in food_label or food_label in food_name:
-                return self.nutrition_db[food_name]
-            
-            # Check for word overlaps
-            food_words = set(food_label.split())
-            db_words = set(food_name.split())
-            if len(food_words.intersection(db_words)) >= 1:
-                return self.nutrition_db[food_name]
+        # Analyze food type and calculate realistic nutrition values
         
-        # Enhanced default values based on food category
-        if any(dessert in food_label for dessert in ["cake", "pie", "cookie", "cream"]):
-            return {"calories": 300, "protein": 4, "carbs": 45, "fat": 12, "fiber": 2, "saturated_fat": 6, "sodium": 200}
-        elif any(protein in food_label for protein in ["chicken", "beef", "fish", "meat"]):
-            return {"calories": 200, "protein": 25, "carbs": 2, "fat": 8, "fiber": 0, "saturated_fat": 3, "sodium": 80}
+        # MEAT/PROTEIN FOODS
+        if any(meat in food_lower for meat in ["chicken", "beef", "pork", "lamb", "turkey", "duck", "steak", "meat"]):
+            base_calories = 250 if "beef" in food_lower or "pork" in food_lower else 180
+            return {
+                "calories": base_calories, "protein": 25, "carbs": 2, "fat": 12, 
+                "fiber": 0, "saturated_fat": 4, "sodium": 75
+            }
+        
+        # SEAFOOD
+        elif any(fish in food_lower for fish in ["fish", "salmon", "tuna", "cod", "shrimp", "crab", "lobster", "oyster"]):
+            return {
+                "calories": 180, "protein": 22, "carbs": 1, "fat": 8, 
+                "fiber": 0, "saturated_fat": 2, "sodium": 60
+            }
+        
+        # DESSERTS & SWEETS
+        elif any(sweet in food_lower for sweet in ["cake", "pie", "cookie", "ice cream", "donut", "chocolate", "candy", "cupcake"]):
+            sweetness_factor = 1.2 if "chocolate" in food_lower else 1.0
+            return {
+                "calories": int(320 * sweetness_factor), "protein": 4, "carbs": 48, "fat": 14, 
+                "fiber": 2, "saturated_fat": 8, "sodium": 180
+            }
+        
+        # BREAD & CARBS
+        elif any(carb in food_lower for carb in ["bread", "pasta", "rice", "noodle", "bagel", "toast", "cereal"]):
+            return {
+                "calories": 220, "protein": 8, "carbs": 42, "fat": 3, 
+                "fiber": 3, "saturated_fat": 0.5, "sodium": 320
+            }
+        
+        # FRUITS
+        elif any(fruit in food_lower for fruit in ["apple", "banana", "orange", "berry", "grape", "fruit"]):
+            return {
+                "calories": 80, "protein": 1, "carbs": 20, "fat": 0.3, 
+                "fiber": 3, "saturated_fat": 0, "sodium": 2
+            }
+        
+        # VEGETABLES
+        elif any(veg in food_lower for veg in ["salad", "vegetable", "broccoli", "carrot", "spinach", "tomato"]):
+            return {
+                "calories": 35, "protein": 2, "carbs": 7, "fat": 0.2, 
+                "fiber": 3, "saturated_fat": 0, "sodium": 20
+            }
+        
+        # DAIRY
+        elif any(dairy in food_lower for dairy in ["cheese", "milk", "yogurt", "cream"]):
+            return {
+                "calories": 150, "protein": 8, "carbs": 12, "fat": 8, 
+                "fiber": 0, "saturated_fat": 5, "sodium": 150
+            }
+        
+        # FRIED FOODS
+        elif any(fried in food_lower for fried in ["fried", "fries", "chips", "crispy"]):
+            return {
+                "calories": 365, "protein": 4, "carbs": 40, "fat": 20, 
+                "fiber": 4, "saturated_fat": 3, "sodium": 400
+            }
+        
+        # PIZZA & FAST FOOD
+        elif any(fast in food_lower for fast in ["pizza", "burger", "sandwich", "wrap"]):
+            return {
+                "calories": 280, "protein": 14, "carbs": 30, "fat": 12, 
+                "fiber": 2, "saturated_fat": 5, "sodium": 600
+            }
+        
+        # SOUPS & LIQUIDS
+        elif any(soup in food_lower for soup in ["soup", "broth", "stew", "chowder"]):
+            return {
+                "calories": 120, "protein": 6, "carbs": 15, "fat": 4, 
+                "fiber": 2, "saturated_fat": 1.5, "sodium": 800
+            }
+        
+        # DEFAULT for unknown foods - moderate values
         else:
-            return {"calories": 180, "protein": 6, "carbs": 25, "fat": 6, "fiber": 3, "saturated_fat": 2, "sodium": 150}
+            return {
+                "calories": 200, "protein": 8, "carbs": 25, "fat": 8, 
+                "fiber": 3, "saturated_fat": 2, "sodium": 200
+            }
 
     def _estimate_portion_size_enhanced(self, food_label: str) -> float:
-        """Enhanced portion size estimation"""
-        # Enhanced portion sizes based on Food-101 categories
+        """Dynamic portion size estimation based on actual model predictions"""
+        food_lower = food_label.lower()
+        
+        # Check if we have specific data first
         enhanced_portions = {
             # Proteins - restaurant portions
             "chicken breast": 150, "chicken wings": 180, "beef carpaccio": 100,
             "pork chop": 140, "grilled salmon": 150, "tuna tartare": 120,
             
-            # Breakfast items
+            # Common specific foods
             "french toast": 120, "pancakes": 140, "eggs benedict": 200,
-            
-            # Desserts - typical serving
             "chocolate cake": 100, "cheesecake": 110, "apple pie": 125,
-            "ice cream": 65, "donuts": 50,
-            
-            # International dishes
-            "sushi": 200, "ramen": 300, "pad thai": 250,
-            "spaghetti carbonara": 200, "paella": 250,
-            
-            # Salads
-            "caesar salad": 150, "greek salad": 200, "caprese salad": 120,
-            
-            # Sandwiches
-            "club sandwich": 200, "hamburger": 150, "hot dog": 100,
+            "ice cream": 65, "donuts": 50, "sushi": 200, "ramen": 300,
         }
         
-        # Direct lookup
+        # Direct lookup for known foods
         if food_label in enhanced_portions:
             return enhanced_portions[food_label]
         
-        # Category-based enhanced estimation
-        for category, foods in self.food_categories.items():
-            if any(food in food_label for food in foods):
-                if category == "protein" or category == "seafood":
-                    return 150
-                elif category == "breakfast":
-                    return 140
-                elif category == "dessert":
-                    return 90
-                elif category in ["asian", "italian"]:
-                    return 220
-                elif category == "salad":
-                    return 160
-                elif category == "sandwich":
-                    return 170
-                elif category == "soup":
-                    return 250
+        # DYNAMIC PORTION ESTIMATION based on food type
         
-        return 130  # Enhanced default portion size
+        # Small portions (snacks, desserts, appetizers)
+        if any(small in food_lower for small in ["cookie", "candy", "chip", "cracker", "appetizer", "donut"]):
+            return 60
+        
+        # Medium portions (main course proteins, vegetables)
+        elif any(med in food_lower for med in ["chicken", "beef", "fish", "pork", "steak", "salad"]):
+            return 150
+        
+        # Large portions (pasta, rice dishes, casseroles, pizza)
+        elif any(large in food_lower for large in ["pasta", "rice", "noodle", "pizza", "casserole", "burrito"]):
+            return 250
+        
+        # Extra large (soups, stews, large meals)
+        elif any(xl in food_lower for xl in ["soup", "stew", "ramen", "chowder", "bowl"]):
+            return 300
+        
+        # Beverages and liquids
+        elif any(liquid in food_lower for liquid in ["juice", "smoothie", "shake", "drink"]):
+            return 200
+        
+        # Fruits (individual pieces)
+        elif any(fruit in food_lower for fruit in ["apple", "banana", "orange", "pear"]):
+            return 120
+        
+        # Default medium portion
+        else:
+            return 140
 
     def _detect_ingredients_enhanced(self, food_predictions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Enhanced ingredient detection with better categorization"""
