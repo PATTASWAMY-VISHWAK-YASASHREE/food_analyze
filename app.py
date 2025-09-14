@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 import logging
 
-# Import our Hugging Face food analyzer
-from hf_food_analyzer import HuggingFaceFoodAnalyzer
+# Import our Enhanced Hugging Face food analyzer
+from hf_food_analyzer_enhanced import EnhancedHuggingFaceFoodAnalyzer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -104,10 +104,10 @@ class EnhancedFoodAnalyzer:
         self.hf_token = os.getenv("HUGGINGFACE_TOKEN")
         
         try:
-            self.hf_analyzer = HuggingFaceFoodAnalyzer(hf_token=self.hf_token)
-            logger.info("Hugging Face Food Analyzer initialized successfully")
+            self.hf_analyzer = EnhancedHuggingFaceFoodAnalyzer(hf_token=self.hf_token)
+            logger.info("Enhanced Hugging Face Food Analyzer initialized successfully")
         except Exception as e:
-            logger.error(f"Could not initialize Hugging Face Food Analyzer: {e}", exc_info=True)
+            logger.error(f"Could not initialize Enhanced Hugging Face Food Analyzer: {e}", exc_info=True)
             self.hf_analyzer = None
 
         logger.info("Enhanced Food Nutrition Analyzer (HF version) initialized successfully")
