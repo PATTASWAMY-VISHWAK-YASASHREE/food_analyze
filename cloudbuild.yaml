@@ -1,13 +1,23 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/food-analyzer:v1.0', '.']
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/food-analyzer:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/food-analyzer:latest'
+      - '.'
+    timeout: '600s'
 
-  # Push the container image to Container Registry
+  # Push the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/food-analyzer:v1.0']
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/food-analyzer'
 
-  # Deploy container image to Cloud Run
+  # Deploy to Cloud Run with extended timeout
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -15,7 +25,7 @@ steps:
       - 'deploy'
       - 'food-analyzer'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/food-analyzer:v1.0'
+      - 'gcr.io/$PROJECT_ID/food-analyzer:$COMMIT_SHA'
       - '--region'
       - 'us-central1'
       - '--platform'
@@ -23,24 +33,26 @@ steps:
       - '--allow-unauthenticated'
       - '--port'
       - '8080'
-      - '--memory'
-      - '2Gi'
-      - '--cpu'
-      - '1'
-      - '--max-instances'
-      - '10'
-      - '--timeout'
-      - '300'
-      - '--set-env-vars'
-      - 'LOG_LEVEL=INFO'
+      - '--service-account'
+      - 'food-analyzer-sa@$PROJECT_ID.iam.gserviceaccount.com'
       - '--set-secrets'
       - 'GEMINI_API_KEY=gemini-api-key:latest'
-
-images:
-  - 'gcr.io/$PROJECT_ID/food-analyzer:v1.0'
+      - '--memory'
+      - '1Gi'  # Increased memory
+      - '--cpu'
+      - '2'    # Increased CPU
+      - '--timeout'
+      - '300s'  # 5 minute timeout
+      - '--concurrency'
+      - '100'
+      - '--max-instances'
+      - '100'
+      - '--min-instances'
+      - '0'
+    timeout: '600s'
 
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: 'E2_HIGHCPU_8'
 
-timeout: '1200s'
+timeout: '1200s'  # 20 minute total timeout
