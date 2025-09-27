@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
 import google.generativeai as genai
-from google.genai import types
 import json
 import socket
 from typing import Dict, Any, Optional
@@ -27,14 +26,8 @@ gemini_client = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    global gemini_client
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set")
-    
-    gemini_client = genai.Client(api_key=api_key)
-    logger.info("Gemini client initialized")
+    # Startup - just log that we're starting
+    logger.info("Food analyzer starting up")
     
     yield
     
@@ -101,6 +94,15 @@ Values per 100g. No markdown, no explanation."""
 
 async def analyze_food_image(image_data: bytes) -> Dict[str, Any]:
     """Analyze food image using Gemini API."""
+    # Initialize client if not already done
+    global gemini_client
+    if gemini_client is None:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable not set")
+        gemini_client = genai.Client(api_key=api_key)
+        logger.info("Gemini client initialized")
+    
     loop = asyncio.get_event_loop()
     
     # Optimize image in thread pool
@@ -110,11 +112,11 @@ async def analyze_food_image(image_data: bytes) -> Dict[str, Any]:
     
     # Prepare request
     contents = [
-        types.Content(
+        genai.Content(
             role="user",
             parts=[
-                types.Part.from_text(text=get_optimized_prompt()),
-                types.Part(inline_data=types.Blob(
+                genai.Part.from_text(text=get_optimized_prompt()),
+                genai.Part(inline_data=genai.Blob(
                     mime_type='image/jpeg', 
                     data=optimized_image
                 ))
@@ -123,7 +125,7 @@ async def analyze_food_image(image_data: bytes) -> Dict[str, Any]:
     ]
     
     # Configure generation with minimal tokens
-    generate_content_config = types.GenerateContentConfig(
+    generate_content_config = genai.GenerateContentConfig(
         temperature=0.1,  # Lower temperature for more consistent output
         max_output_tokens=500,  # Limit output tokens
         response_mime_type="application/json",  # Request JSON response
@@ -210,7 +212,14 @@ async def analyze(image: UploadFile = File(...)):
 @app.get('/health')
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "service": "food-analyzer"}
+    # Check if API key is available
+    api_key_available = bool(os.environ.get("GEMINI_API_KEY"))
+    
+    return {
+        "status": "healthy" if api_key_available else "degraded", 
+        "service": "food-analyzer",
+        "api_key_configured": api_key_available
+    }
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', find_free_port()))
