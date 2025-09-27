@@ -1,53 +1,113 @@
-# 🍽️ Enhanced Food Nutrition Analyzer API with Superior Hugging Face Models
+# 🍽️ Food Nutrition Analyzer API## 📖 API Endpoints
 
-A powerful FastAPI service that analyzes food images using **enhanced Hugging Face AI models** with **89.6% accuracy** and provides comprehensive nutritional information with FDA-grade nutrition database.
+### POST `/analyze`
+Upload a food image for analysis.
 
-## ✨ Enhanced Features
+**Request:**
+```bash
+curl -X POST "http://localhost:8000/analyze" \
+  -H "Content-Type: multipart/form-data" \
+  -F "image=@your_food_image.jpg"
+```
 
-- **🚀 UPGRADED AI Models**: Uses `ashaduzzaman/vit-finetuned-food101` with **89.6% accuracy** (vs basic model)
-- **🧠 Vision Transformer Architecture**: State-of-the-art ViT models for superior food recognition
-- **📊 FDA Nutrition Integration**: Enhanced with `sgarbi/bert-fda-nutrition-ner` for nutrition extraction
-- **🔍 Advanced Ingredient Detection**: Identifies multiple ingredients with enhanced accuracy
-- **� Comprehensive Nutrition Data**: Detailed macronutrients, vitamins, and minerals
-- **🌐 Enhanced Nutrition Database**: 101 Food-101 categories with precise nutrition data
-- **🎯 Superior Health Assessment**: Advanced health scoring with detailed reasoning
-- **🚀 Fast API**: High-performance async API with automatic documentation
-- **📱 Easy Integration**: RESTful API with JSON responses
-- **🔧 Intelligent Fallback**: Enhanced fallback classification for reliability
-- **🆓 No API Keys Required**: Uses open-source enhanced Hugging Face models
+**Response:**
+```json
+{
+  "dish_name": "Grilled Chicken Salad",
+  "ingredients": ["chicken", "lettuce", "tomatoes", "olive oil"],
+  "nutrition": {
+    "calories": {"amount": 250, "unit": "kcal"},
+    "protein": {"amount": 25, "unit": "g"},
+    "carbs": {"amount": 10, "unit": "g"},
+    "fat": {"amount": 15, "unit": "g"},
+    "fiber": {"amount": 3, "unit": "g"}
+  }
+}
+```
 
-## 🆕 Model Upgrades
+### GET `/health`
+API health status.
 
-### Current Enhanced Models:
-- **Primary**: `ashaduzzaman/vit-finetuned-food101` (89.6% accuracy)
-- **Nutrition NER**: `sgarbi/bert-fda-nutrition-ner` (FDA nutrition data)
-- **Architecture**: Vision Transformer (ViT) - state-of-the-art
-- **Training Data**: Food-101 dataset (101 categories, 101k images)
-
-### Previous Basic Model:
-- **Old**: `nateraw/food` (unknown accuracy, basic architecture)
-- **Limitations**: Limited categories, basic confidence scoring
-
-## � Accuracy Improvements
-
-| Metric | Previous Model | Enhanced Model | Improvement |
-|--------|---------------|----------------|-------------|
-| Architecture | Basic CNN | Vision Transformer | Advanced |
-| Accuracy | Unknown/Low | **89.6%** | Significant |
-| Food Categories | Limited | **101 categories** | Comprehensive |
-| Confidence Scoring | Basic | **Advanced** | Superior |
-| Nutrition Database | Basic | **FDA-enhanced** | Professional |
-| Health Assessment | Simple | **Advanced scoring** | Detailed |
+### GET `/`
+Basic API information.stAPI service that analyzes food images using Google's Gemini AI and provides comprehensive nutritional information.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.8+
-- Optional: Hugging Face account and token for enhanced model access
+- Docker (for containerized deployment)
+- Google Gemini API key
 
-### Supported Image Formats
-The API supports common image formats including:
-- JPEG (.jpg, .jpeg)
+### Environment Setup
+Set your Gemini API key:
+```bash
+export GEMINI_API_KEY=your_api_key_here
+```
+
+### Installation
+```bash
+git clone <your-repo-url>
+cd food_analyze
+pip install -r requirements.txt
+```
+
+### Run Locally
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+### Access
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+
+## � API Endpoints
+
+### POST `/analyze-food`
+Upload a food image for analysis.
+
+**Request:**
+```bash
+curl -X POST "http://localhost:8000/analyze-food" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_food_image.jpg"
+```
+
+### GET `/health`
+API health status.
+
+### GET `/`
+Basic API information.
+
+## 🏗️ Project Structure
+
+```
+food_analyze/
+├── app.py                    # Main FastAPI application with Gemini AI
+├── requirements.txt          # Python dependencies
+├── Dockerfile               # Docker container configuration
+├── cloudbuild.yaml          # Google Cloud Build configuration
+├── .gcloudignore           # Google Cloud deployment ignore rules
+├── .gitignore              # Git ignore rules
+└── README.md               # This documentation
+```
+
+## 🚀 Deployment
+
+### Google Cloud Run
+Set your Gemini API key as a substitution variable:
+```bash
+gcloud builds submit --config cloudbuild.yaml --substitutions _GEMINI_API_KEY=your_key_here .
+```
+
+### Docker
+```bash
+docker build -t food-analyzer .
+docker run -p 8080:8080 -e GEMINI_API_KEY=your_key_here food-analyzer
+```
+
+## 📄 License
+
+MIT License
 - PNG (.png)
 - GIF (.gif)
 - WebP (.webp)
@@ -152,17 +212,12 @@ food_analyze/
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Required Environment Variables
+- `GEMINI_API_KEY`: Your Google Gemini API key (required)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `HUGGINGFACE_TOKEN` | No | Hugging Face API token for enhanced model access |
-| `LOG_LEVEL` | No | Logging level (default: INFO) |
-
-### Hugging Face Models Used
-
-- **Food Classification**: `nateraw/food` (primary model)
-- **Fallback**: Local heuristic-based classification when models are unavailable
+### Optional Environment Variables
+- `PORT`: Server port (default: 8080)
+- `LOG_LEVEL`: Logging level (default: INFO)
 
 ## 🧪 Testing
 
